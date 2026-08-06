@@ -1,0 +1,11 @@
+one terminal
+cd backend
+python -m uvicorn main:app --reload --port 8000
+
+
+another
+cd frontend
+python -m http.server 3000
+
+#website
+http://localhost:3000

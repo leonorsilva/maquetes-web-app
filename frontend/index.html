@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DXF Wall & Profile Inspector</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
+        #sidebar { width: 320px; background: #f4f4f9; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        #main { flex: 1; position: relative; }
+        canvas { width: 100%; height: 100%; display: block; background: #1e1e1e; cursor: crosshair; }
+        .control { margin-bottom: 15px; }
+        button { padding: 8px 12px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:disabled { background: #ccc; }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>DXF Tool</h2>
+        <div class="control">
+            <label>1. Select File:</label><br>
+            <input type="file" id="dxfFile" accept=".dxf">
+        </div>
+        <div class="control">
+            <label>2. Filter Layer:</label>
+            <select id="layerSelect" disabled><option>Upload file first...</option></select>
+        </div>
+        <hr>
+        <div class="control">
+            <p><b>Instructions:</b><br>• Scroll to zoom, drag to pan.<br>• Click lines to select walls.<br>• Double-click a line to mark it as <i>Starting Point</i>.</p>
+        </div>
+        <div class="control">
+            <p>Selected Count: <span id="selCount">0</span></p>
+            <button id="genBtn" disabled>Generate Perfil DXF</button>
+        </div>
+    </div>
+    <div id="main">
+        <canvas id="viewport"></canvas>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
