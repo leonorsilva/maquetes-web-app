@@ -3,7 +3,10 @@ const API_URL = "http://localhost:8000";
 let allEntities = [];
 let filteredEntities = [];
 let selectedEntities = new Map(); // handle -> { entity, height }
-let startingPointHandle = null;
+let selectedEntities_temp = new Map()
+let layers = new Map()
+
+let colors = [ "#fb866e",  "#4c3458",  "#786996",  "#cbd6b0",  "#8a901b",  "#d6ee78",  "#d392a2",  "#ae7da2",  "#67b3d3",  "#40738d"]
 
 const canvas = document.getElementById("viewport");
 const ctx = canvas.getContext("2d");
@@ -11,6 +14,12 @@ const ctx = canvas.getContext("2d");
 let camera = { x: 0, y: 0, zoom: 1 };
 let isDragging = false;
 let startPan = { x: 0, y: 0 };
+
+// Track Shift Key state for multi-select
+let isShiftPressed = false;
+
+window.addEventListener("keydown", (e) => { if (e.key === "Shift") isShiftPressed = true; });
+window.addEventListener("keyup", (e) => { if (e.key === "Shift") isShiftPressed = false; });
 
 // Auto-resize Canvas
 function resizeCanvas() {
@@ -87,12 +96,35 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     filteredEntities.forEach(e => {
-        const isSelected = selectedEntities.has(e.handle);
-        const isStart = startingPointHandle === e.handle;
+        const isSelected = selectedEntities.has(e.handle)
+        const isTempSelected = selectedEntities_temp.has(e.handle);
 
         ctx.beginPath();
-        ctx.lineWidth = isStart ? 4 : (isSelected ? 3 : 1);
-        ctx.strokeStyle = isStart ? "#ff0000" : (isSelected ? "#00ff00" : "#ffffff");
+        ctx.lineWidth = 4;
+        if (isTempSelected) {
+            ctx.strokeStyle = "#00ffff"; // Cyan
+            console.log(selectedEntities_temp.get(e.handle));
+            console.log(selectedEntities_temp.get(e.handle).corner);
+            if (selectedEntities_temp.get(e.handle).corner == 1) {
+                ctx.strokeStyle = "#ff0000"; // Red
+            }
+            ctx.lineWidth = 3 ;
+        } else if (isSelected) {
+            ctx.strokeStyle = "#00ff00"; // Green 
+        } else {
+            ctx.strokeStyle = "#0a0a0a"; // Default White
+            ctx.lineWidth = 1
+        }
+
+        layers.forEach((layerEntities, layerName) => {
+            const islayer = layerEntities.has(e.handle)
+            const color = colors[layerName]
+            console.log(`Layer: ${layerName}, Color: ${color}, Entity Handle: ${e.handle}, Is in Layer: ${islayer}`);
+            if (islayer) {
+                ctx.strokeStyle = color; // Green if selected, else layer color
+                ctx.lineWidth = 10 ;
+            }
+        });
 
         for (let i = 0; i < e.xs.length; i++) {
             const pt = worldToScreen(e.xs[i], e.ys[i]);
@@ -126,7 +158,7 @@ canvas.addEventListener("mousemove", (e) => {
 
 canvas.addEventListener("mouseup", () => isDragging = false);
 
-// Picking Entities
+// Canvas Click Event Listener
 canvas.addEventListener("click", (e) => {
     const rect = canvas.getBoundingClientRect();
     const clickPos = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -134,23 +166,101 @@ canvas.addEventListener("click", (e) => {
     // Hit test lines
     for (let ent of filteredEntities) {
         for (let i = 0; i < ent.xs.length - 1; i++) {
-            if (distToSegment(clickPos, {x: ent.xs[i], y: ent.ys[i]}, {x: ent.xs[i+1], y: ent.ys[i+1]}) < (8 / camera.zoom)) {
-                if (selectedEntities.has(ent.handle)) {
-                    selectedEntities.delete(ent.handle);
-                } else {
-                    const h = prompt(`Enter wall height for entity ${ent.handle}:`, "2.8");
-                    if (h !== null) {
-                        selectedEntities.set(ent.handle, { entity: ent, height: parseFloat(h) || 2.8 });
-                        if (!startingPointHandle) startingPointHandle = ent.handle;
+            const p1 = { x: ent.xs[i], y: ent.ys[i] };
+            const p2 = { x: ent.xs[i+1], y: ent.ys[i+1] };
+
+            if (distToSegment(clickPos, p1, p2) < (8 / camera.zoom)) {
+                // If Shift is held, then entity needs to consider the paper width
+                if (isShiftPressed) {
+                    if (!selectedEntities_temp.has(ent.handle)){
+                        selectedEntities_temp.set(ent.handle, { entity: ent, height: 2.8, corner: 1 });
                     }
+                    else{
+                        selectedEntities_temp.set(ent.handle, { entity: ent, height: 2.8, corner: 0 });
+                    }
+                } else if (selectedEntities.has(ent.handle)) {
+                    selectedEntities.delete(ent.handle);
+
+                } else if (selectedEntities_temp.has(ent.handle)) {
+                    selectedEntities_temp.delete(ent.handle);
+                } else {
+                    // Default height of 2.8 until explicitly changed
+                    selectedEntities_temp.set(ent.handle, { entity: ent, height: 2.8, corner: 0 });
                 }
-                document.getElementById("selCount").innerText = selectedEntities.size;
-                document.getElementById("genBtn").disabled = selectedEntities.size === 0;
+
+                updateUI();
                 draw();
                 return;
             }
         }
     }
+});
+
+// Update button states and counters
+function updateUI() {
+    const count = selectedEntities.size + selectedEntities_temp.size;
+    document.getElementById("selCount").innerText = count;
+    document.getElementById("setHeightBtn").disabled = count === 0;
+    document.getElementById("clearSelBtn").disabled = count === 0;
+    document.getElementById("addLayer").disabled = count === 0;
+    const totalEntities = count + layers.size;
+    document.getElementById("genBtn").disabled = totalEntities === 0;
+}
+
+// Bulk Height Assignment Button
+document.getElementById("setHeightBtn").addEventListener("click", () => {
+    if (selectedEntities_temp.size === 0) return;
+
+    const inputHeight = prompt(
+        `Enter height for all ${selectedEntities_temp.size} selected entities:`, 
+        "2.8"
+    );
+
+    if (inputHeight !== null) {
+        const heightVal = parseFloat(inputHeight) || 2.8;
+        selectedEntities_temp.forEach((val, handle) => {
+            val.height = heightVal;
+            console.log(val);
+            console.log(handle);
+        });
+        selectedEntities_temp.forEach((value, key) => {
+            selectedEntities.set(key, value);
+        }); // Commit temp selection to main selection
+
+        selectedEntities_temp.clear(); // Clear temp selection after committing
+        alert(`Assigned height ${heightVal}m to ${selectedEntities.size} entities.`);
+    }
+});
+
+document.getElementById("addLayer").addEventListener("click", () => {
+    createNewLayer();
+});
+
+function createNewLayer() {
+    if (selectedEntities.size === 0) {
+        alert("No entities selected to add to a new layer.");
+        return false;
+    }
+    if (selectedEntities_temp.size > 0) {
+        alert("Select height for all entities before adding to a new layer.");
+        return false;
+    }
+
+    const layerContent = new Map(selectedEntities);
+    layers.set(`${layers.size}`, layerContent);
+    selectedEntities.clear();
+    
+    updateUI();
+    draw();
+    return true; // Successfully created
+}
+
+// Clear Selection Button
+document.getElementById("clearSelBtn").addEventListener("click", () => {
+    selectedEntities.clear();
+    selectedEntities_temp.clear();
+    updateUI();
+    draw();
 });
 
 // Segment Distance Calculation for Click Accuracy
@@ -164,32 +274,47 @@ function distToSegment(p, v, w) {
 
 // Generate Perfil API Request
 document.getElementById("genBtn").addEventListener("click", async () => {
-    let entitiesCoords = [];
+    let layerCoords = [];
     let startPointData = null;
 
-    selectedEntities.forEach((val, handle) => {
-        const ent = val.entity;
-        
-        // Extract start and end coordinates of the entity
-        const startPt = [ent.xs[0], ent.ys[0]];
-        const endPt = [ent.xs[ent.xs.length - 1], ent.ys[ent.ys.length - 1]];
-        
-        // Match the structure expected by generate-perfil: [ [x1, y1], [x2, y2], height ]
-        const formatted = [startPt, endPt, val.height];
+    if (selectedEntities.size > 0) {
+        createNewLayer(); // Commit any remaining temp selections to a new layer
+    }
 
-        entitiesCoords.push(formatted);
+    layers.forEach((layerEntities, layerName) => {  
+        let entitiesCoords = [];
+        layerEntities.forEach((val, handle) => {
+            console.log(`generating perfil`);
+            const ent = val.entity;
+            console.log(`Entity Handle: ${ent}, Height: ${val.height}`);
+            console.log(`Entity Coordinates: Xs: ${ent.xs}, Ys: ${ent.ys}`);
+            
+            // Extract start and end coordinates of the entity
+            const startPt = [ent.xs[0], ent.ys[0]];
+            const endPt = [ent.xs[1], ent.ys[1]];
+            
+            // Match the structure expected by generate-perfil: [ [x1, y1], [x2, y2], height ]
+            const formatted = [startPt, endPt, val.height, val.corner];
 
-        if (handle === startingPointHandle) {
-            startPointData = formatted;
-        }
+            entitiesCoords.push(formatted);
+
+        });
+        layerCoords.push(entitiesCoords);
     });
+
+    const paperWidth = document.getElementById("paperWidth").value;
+    console.log(paperWidth.value);
+    if (paperWidth.value == 0){
+        alert('paper width is missing');
+        return false;
+    }
 
     const res = await fetch(`${API_URL}/generate-perfil`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            startingPoint: startPointData || entitiesCoords[0],
-            entitiesCoordinates: entitiesCoords
+            layerCoords: layerCoords,
+            paperWidth: paperWidth
         })
     });
 
