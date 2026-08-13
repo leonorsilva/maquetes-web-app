@@ -9,3 +9,7 @@ python -m http.server 3000
 
 #website
 http://localhost:3000
+
+
+#atencao, fazer branch no git
+#const API_URL = "https://maquetes-web-app.onrender.com", so para deployment
