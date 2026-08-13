@@ -9,6 +9,9 @@ import tempfile
 import os
 import io
 import numpy as np
+import base64
+from ezdxf.enums import TextEntityAlignment
+
 # Use string alignment to avoid import resolution issues with ezdxf.enums
 
 
@@ -120,6 +123,7 @@ async def generate_perfil(data: PerfilRequest):
     print("Sorted dictionary:", sorted_dict_lat) """
     wholePerfil = []
     wholeAngle = []
+    
     for entities_coordinates in layerCoords:
 
         ordered_perfil = [entities_coordinates[0]]
@@ -129,47 +133,91 @@ async def generate_perfil(data: PerfilRequest):
         entities_coordinates.remove(entities_coordinates[0])
         print('Entities Coordinates:', entities_coordinates)
 
-
+        allLeft = False
         while len(entities_coordinates) > 0:
             print(next_entity)
             print('Next Entity:', next_entity[-1])
-            last_point = next_entity[-1][1]
-            print('Last Point:', last_point)
-            
-                
-            next_entity = None
-            print("Sorted dictionary:", entities_coordinates)
-            print('........')
-            print('Ordered Perfil:', ordered_perfil)
-            #TODO: confirmar que isto funciona com a esquerda e direita, pq agr assume q o starting point e um extremo
-            for i in entities_coordinates:
-                if abs(i[0][0] - last_point[0]) < 1e-2 and abs(i[0][1] - last_point[1]) < 1e-2:  # Using a small epsilon for floating-point comparison
-                    next_entity = [i]
-                    entities_coordinates.remove(i)
-                    ordered_perfil.append(i)
-                    break
-                if abs(i[1][0] - last_point[0]) < 1e-2 and abs(i[1][1] - last_point[1]) < 1e-2:
-                    next_entity = i
-                    entities_coordinates.remove(i)
-                    next_entity_reverse = next_entity.copy()
-                    next_entity_reverse[0], next_entity_reverse[1] = next_entity[1], next_entity[0]  # Swap start and end
-                    
-                    ordered_perfil.append(next_entity_reverse)
-                    #TODO: refazer isto de modo a nao ter tantos parentesis
-                    next_entity =[ next_entity_reverse]
-                    #next_entity[0], next_entity[1] = next_entity[1], next_entity[0]  # Swap back to original order
-                    break
 
-            print('......')
-            print(next_entity)
-            print(len(entities_coordinates))
-            print(len(ordered_perfil))
-            if not next_entity and len(entities_coordinates) > 0 and len(ordered_perfil)==1:
-                #if not left, go right, although should check both sides
-                ordered_perfil = [[ordered_perfil[0][1], ordered_perfil[0][0],ordered_perfil[0][2],ordered_perfil[0][3]]]
-                next_entity = ordered_perfil.copy()
-                continue
-            angle.append(compute_angle_with_dot_product(ordered_perfil[-2][0:2], ordered_perfil[-1][0:2]))
+            if not allLeft:
+                
+                last_point = next_entity[-1][1]
+                print('Last Point:', last_point)
+                
+                next_entity = None
+                print("Sorted dictionary:", entities_coordinates)
+                print('........')
+                print('Ordered Perfil:', ordered_perfil)
+                #TODO: confirmar que isto funciona com a esquerda e direita, pq agr assume q o starting point e um extremo
+                for i in entities_coordinates:
+                    if abs(i[0][0] - last_point[0]) < 1e-2 and abs(i[0][1] - last_point[1]) < 1e-2:  # Using a small epsilon for floating-point comparison
+                        next_entity = [i]
+                        entities_coordinates.remove(i)
+                        ordered_perfil.append(i)
+                        angle.append(compute_angle_with_dot_product(ordered_perfil[-2][0:2], ordered_perfil[-1][0:2]))
+                        break
+
+                    if abs(i[1][0] - last_point[0]) < 1e-2 and abs(i[1][1] - last_point[1]) < 1e-2:
+                        next_entity = i
+                        entities_coordinates.remove(i)
+                        next_entity_reverse = next_entity.copy()
+                        next_entity_reverse[0], next_entity_reverse[1] = next_entity[1], next_entity[0]  # Swap start and end
+                        
+                        ordered_perfil.append(next_entity_reverse)
+                        #TODO: refazer isto de modo a nao ter tantos parentesis
+                        next_entity =[ next_entity_reverse]
+                        #next_entity[0], next_entity[1] = next_entity[1], next_entity[0]  # Swap back to original order
+                        angle.append(compute_angle_with_dot_product(ordered_perfil[-2][0:2], ordered_perfil[-1][0:2]))
+                        break
+            
+                print('......')
+                print(next_entity)
+                print(len(entities_coordinates))
+                print(len(ordered_perfil))
+                if (not next_entity and len(entities_coordinates) > 0) or next_entity[-1][-1]==1:
+                    #if not left, go right, although should check both sides
+                    next_entity = [ordered_perfil[0]]
+                    allLeft = True
+                    continue
+                
+
+            else:
+                last_point = next_entity[-1][0]
+                print('Last Point:', last_point)
+                
+                next_entity = None
+                print("Sorted dictionary:", entities_coordinates)
+                print('........')
+                print('Ordered Perfil:', ordered_perfil)
+                #TODO: confirmar que isto funciona com a esquerda e direita, pq agr assume q o starting point e um extremo
+                for i in entities_coordinates:
+                    if abs(i[1][0] - last_point[0]) < 1e-2 and abs(i[1][1] - last_point[1]) < 1e-2:
+                        next_entity = [i]
+                        entities_coordinates.remove(i)
+                        ordered_perfil.insert(0,i)
+                        angle.insert(0,compute_angle_with_dot_product(ordered_perfil[0][0:2], ordered_perfil[1][0:2]))
+                        break
+                    elif abs(i[0][0] - last_point[0]) < 1e-2 and abs(i[0][1] - last_point[1]) < 1e-2:
+                        next_entity = i
+                        entities_coordinates.remove(i)
+                        next_entity_reverse = next_entity.copy()
+                        next_entity_reverse[0], next_entity_reverse[1] = next_entity[1], next_entity[0]  # Swap start and end
+                        
+                        ordered_perfil.insert(0,next_entity_reverse)
+                        #TODO: refazer isto de modo a nao ter tantos parentesis
+                        next_entity =[ next_entity_reverse]
+                        #next_entity[0], next_entity[1] = next_entity[1], next_entity[0]  # Swap back to original order
+                        angle.insert(0,compute_angle_with_dot_product(ordered_perfil[0][0:2], ordered_perfil[1][0:2]))
+                        break
+
+                print('......')
+                print(next_entity)
+                print(len(entities_coordinates))
+                print(len(ordered_perfil))
+                if not next_entity and len(entities_coordinates) > 0 :
+                    print('THIS SHOULD NEVER HAPPEN, unless a continous set was selected')
+                
+
+
         print('Ordered Perfil:', ordered_perfil)
         print('Angles:', angle)
         wholePerfil.append(ordered_perfil)
@@ -179,23 +227,23 @@ async def generate_perfil(data: PerfilRequest):
 
 
     # Generate Output DXF
-    doc = ezdxf.new(dxfversion="R2010")
+    doc = ezdxf.new(dxfversion="R2010",setup=True)
     
     msp = doc.modelspace()
     total_distance = 0
     #TODO: ver se isto esta em cm em autocad
     displacement = 0
+    globalidx = 0
     for idx in range(len(wholePerfil)):
         ordered_perfil = wholePerfil[idx]
         angle = wholeAngle[idx]
+
+        #TODO: estas heights deviam depender da escala
+        
         msp.add_text(
             f"Layer {idx}",
-            dxfattribs={
-                "height": 2.0,
-                "insert": (0, displacement),      # Required baseline insertion point
-                "align_point": (0, displacement)  # Required alignment anchor point
-            }
-        ).set_pos((0, displacement), align="MIDDLE_RIGHT")
+            height=1,
+        ).set_placement((0, displacement), align=TextEntityAlignment.LEFT)
         displacement += 2
         max_height = 0
         print(ordered_perfil)
@@ -209,7 +257,13 @@ async def generate_perfil(data: PerfilRequest):
 
             msp.add_line((total_distance, 0 + displacement), (total_distance + dist, 0 + displacement))
             msp.add_line((total_distance, height + displacement), (total_distance + dist, height + displacement))
-            if i>0 and height > ordered_perfil[i-1][2]:
+
+            msp.add_text(
+                f"{globalidx}",
+                height=0.2,
+            ).set_placement((total_distance, displacement+0.2), align=TextEntityAlignment.LEFT)
+
+            if i>0 and height != ordered_perfil[i-1][2]:
                 msp.add_line((total_distance, ordered_perfil[i-1][2] + displacement), (total_distance, height + displacement))
             if i==0:
                 msp.add_line((total_distance, 0 + displacement), (total_distance, height + displacement))
@@ -217,12 +271,24 @@ async def generate_perfil(data: PerfilRequest):
             if i==len(ordered_perfil)-1 or abs(angle[i])>2:
                 msp.add_line((total_distance + dist, 0 + displacement), (total_distance + dist, height + displacement))
             total_distance += dist
+            globalidx += 1
 
         
-        displacement += max_height
+        displacement += max_height + 0.2
         total_distance = 0
 
-    tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".dxf")
-    doc.saveas(tmp_file.name)
+    #tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".dxf")
+    doc.saveas("perfil.dxf")
+
+    with open("perfil.dxf", "rb") as file:
+        file_bytes = file.read()
+        base64_dxf = base64.b64encode(file_bytes).decode("utf-8")
+        
+    # 4. Return both in a single JSON payload
+    return {
+        "orderedEntities": wholePerfil,
+        "fileData": base64_dxf,
+        "fileName": "perfil.dxf"
+    }
     
     return FileResponse(tmp_file.name, filename="perfil.dxf", media_type="application/dxf")

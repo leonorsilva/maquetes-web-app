@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ordered Entities Plot</title>
+    <style>
+       body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
+        #sidebar2 { width: 320px; background: #f4f4f9; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        #main { flex: 1; position: relative; }
+        canvas { width: 100%; height: 100%; display: block; background: #f4f4f9; cursor: crosshair; }
+        .control { margin-bottom: 15px; }
+        button { padding: 8px 12px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:disabled { background: #ccc; }
+        .back-btn:hover { background-color: #475569; }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .color-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .dot-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar2">
+
+        <div class="control">
+            <button class="back-btn" onclick="window.close()">Main Page</button>
+        </div>
+        <h3>Legend</h3>
+        <div class="legend">
+            <ul id="legendList" style="list-style: none; padding: 0; margin: 0;"></ul>
+        </div>
+    </div>
+    
+    <div class="canvas-container">
+        <h3>Ordered Entities Plot</h3>
+        <canvas id="plotCanvas" width="900" height="600"></canvas>
+        
+    </div>
+
+    <script src="plot.js"></script>
+</body>
+</html>

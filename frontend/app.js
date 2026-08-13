@@ -304,7 +304,7 @@ document.getElementById("genBtn").addEventListener("click", async () => {
 
     const paperWidth = document.getElementById("paperWidth").value;
     console.log(paperWidth.value);
-    if (paperWidth.value == 0){
+    if (typeof paperWidth == 'undefined'){
         alert('paper width is missing');
         return false;
     }
@@ -323,10 +323,28 @@ document.getElementById("genBtn").addEventListener("click", async () => {
         return;
     }
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "perfil.dxf";
-    a.click();
+    const data = await res.json();
+    // 1. Plot the ordered entities on your Canvas
+    if (data.orderedEntities) {
+        localStorage.setItem("orderedEntitiesPlot", JSON.stringify(data.orderedEntities));
+        window.open("plot.html", "_blank"); // Opens plot page in a new tab
+    }
+
+    // 2. Convert Base64 back to Blob and trigger File Download
+    if (data.fileData) {
+        const byteCharacters = atob(data.fileData);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "application/dxf" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = data.fileName || "perfil.dxf";
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
 });
+
