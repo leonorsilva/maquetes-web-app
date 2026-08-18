@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-ezdxf
-scipy
-python-multipart
