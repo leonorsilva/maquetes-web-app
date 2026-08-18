@@ -1,4 +1,4 @@
-const API_URL = "https://maquetes-web-app.onrender.com";
+const API_URL = "http://localhost:8000";
 
 let allEntities = [];
 let filteredEntities = [];
@@ -327,7 +327,7 @@ document.getElementById("genBtn").addEventListener("click", async () => {
     // 1. Plot the ordered entities on your Canvas
     if (data.orderedEntities) {
         localStorage.setItem("orderedEntitiesPlot", JSON.stringify(data.orderedEntities));
-        window.open("plot.html", "_blank"); // Opens plot page in a new tab
+        window.location.href = "plot.html"; // Navigates to plot page in the current tab
     }
 
     // 2. Convert Base64 back to Blob and trigger File Download

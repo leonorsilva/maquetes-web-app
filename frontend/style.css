@@ -1,0 +1,163 @@
+ 
+/* 1. Prevent body from scrolling */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden; /* Removes browser scrollbars */
+    color: #2f3b35;
+}
+
+
+/* 2. Fixed Sidebar */
+#sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: #d8dfd5;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-right: 1px solid #5c5c5d;
+    box-sizing: border-box;
+}
+
+#main { flex: 1; position: relative; }
+
+canvas { 
+width: 100%; 
+height: 100%; 
+display: block; 
+background: #f5f3ee   ; 
+cursor: crosshair; 
+}
+
+.control { 
+    display: flex;
+    flex-direction: column; /* Stacks items top-to-bottom */
+    gap: 8px; /* Space between every button and element */
+    margin-bottom: 16px; 
+}
+
+/* Buttons: Deep Forest Teal */
+button { 
+width: 100%;
+padding: 10px 16px; 
+background:    #6b7f70; 
+color: #d8dfd5 ; 
+font-weight: 500;
+border: none; 
+cursor: pointer; 
+border-radius: 6px; 
+transition: background 0.2s ease;
+}
+
+button:hover { background: #a6b7a6 ; }
+button:disabled { background: #d8dfd5; cursor: not-allowed; }
+
+.nxt-btn { margin-top: auto;  }
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.color-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.dot-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+.steps-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+}
+
+
+/* 3. Main Video Viewer Container */
+.video-viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    gap: 16px;
+    height: 100vh;
+    overflow: hidden;
+    background: #f5f3ee   ;
+}
+
+/* 4. Flexible Video Container */
+.video-wrapper {
+    flex: 1; /* Takes up all available vertical space */
+    width: 100%;
+    min-height: 0; /* Critical: allows video wrapper to shrink below native video height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #5c5c5d;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* 5. Constrain Video Dimensions */
+#tutorialVideo {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain; /* Keeps 16:9 ratio without overflow */
+}
+
+.video-details {
+    padding-top: 10px;
+}
+
+.video-details h2 {
+    color: #2f3b35;
+    margin-bottom: 4px;
+}
+
+.video-details p {
+    color: #2f3b35;
+    white-space: pre;
+}
+
+#purposeDesc {
+  white-space: pre-line;
+}
+
+.image-gallery {
+    display: flex; /* Arranges children side-by-side */
+    gap: 16px; /* Spacing between the images */
+    width: 100%; /* Spans full width of container */
+    align-items: center; /* Aligns vertically in the middle */
+}
+
+.image-gallery img {
+    flex: 1; /* Makes all 3 images equal width */
+    max-width: 33%; /* Prevents images from stretching beyond frame */
+    height: auto; /* Maintains original image proportions */
+    border-radius: 8px; /* Optional: smooth rounded corners */
+    object-fit: cover; /* Optional: ensures uniform cropping if ratios differ */
+}
