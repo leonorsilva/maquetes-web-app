@@ -57,7 +57,7 @@ function drawOrderedPlot() {
             // ctx.fill();
 
             ctx.fillStyle = "#000000";
-            ctx.font = "bold 11px Arial";
+            ctx.font = "bold 20px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(idx, midX, midY);

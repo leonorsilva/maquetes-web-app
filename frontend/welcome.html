@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Profile Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Welcome - CAD Profile Generator</h2>
+        <div class="steps-menu">
+            <button   onclick="purpose()">
+                <span class="step-num"></span>
+                <div class="step-info">
+                    <strong>Purpose</strong>
+                    <small></small>
+                </div>
+            </button>
+            <button  data-video="videos/upload.mp4" onclick="selectStep(this, 'Step 1: Upload drawing', 'Start by uploading the dxf file of your project.\r\n You have the option to select a specific layer.\r\n Finally, insert the paper width in cm, so it is accounted for on the profile.')">
+                <span class="step-num">1</span>
+                <div class="step-info">
+                    <strong>Upload drawing</strong>
+                    <small>0:14 min</small>
+                </div>
+            </button>
+
+            <button  data-video="videos/select.mp4" onclick="selectStep(this, 'Step 2: Build profiles', 'Zoom in/out with scroll. \r\n Click + drag to move the page. \r\n Click on (multiple) lines to set their height.\r\n Click + Shift on a line to remove the paper width from its length (useful when a profile fits into another profile, which already had the paper width). \r\n Add lines together in a layer if they should be part of the same profile.\r\n Finally generate the profile. \r\n')">
+                <span class="step-num">2</span>
+                <div class="step-info">
+                    <strong>Build profiles</strong>
+                    <small>0:27 min</small>
+                </div>
+            </button>
+
+            <button data-video="videos/download.mp4" onclick="selectStep(this, 'Step 3: Export', 'Learn to inspect entities on the interactive canvas and download DXF files.')">
+                <span class="step-num">3</span>
+                <div class="step-info">
+                    <strong>Export</strong>
+                    <small>0:12 min</small>
+                </div>
+            </button>
+
+            <!-- Redirect Action Button -->
+            <button class="nxt-btn" onclick="window.location.href='index.html'">
+                <strong>Launch Generator App</strong>
+            </button>
+        </div>
+    </div>
+    <div class="video-viewer">
+        <div class="video-wrapper" style="display: none;">
+            <video id="tutorialVideo" controls poster="images/video-poster.png">
+                <source id="videoSource" src="videos/upload.mp4" type="video/mp4">
+                Your browser does not support HTML5 video.
+            </video>
+        </div>
+        <div class="video-details" id="videoDetailsBlock" style="display: none;">
+            <h2 id="videoTitle"></h2>
+            <p id="videoDesc"></p>
+        </div>
+
+        <div class="purpose-details" id="purposeDetailsBlock" >
+            <h2 id="purposeTitle">Purpose</h2>
+            <p id="purposeDesc">The purpose of this tool is to help architects to build 3D profiles from 2D drawings.<br>
+                Instead of doing the calculation manually, this tool extracts the length of the profile from the uploaded drawing and scales it.<br>
+                The user inserts the height for each segment and groups them into layers.<br>
+                Each layer will correspond to a profile.<br>
+                The user can also choose which segments they want to remove the paper width from.<br>
+                Finally, the tool will generate a profile per layer, which the user can print and use to cut the material for the 3D profile.<br>
+                The profiles are identified by the layer number, and each layer number has a numbered segment, so the user knows how to assemble it. On the example below the user sees that segment 5, which accounts for the paper width, fits into segment 3.<br>
+            </p>
+            <div class="image-gallery">
+                <img src="images/layers.png" alt=""  /> 
+                <img src="images/numbered.png" alt=""  />
+                <img src="images/final.png" alt="" />
+            </div>
+        </div>
+    </div>
+    <script src="welcome.js"></script>
+</body>
+</html>
